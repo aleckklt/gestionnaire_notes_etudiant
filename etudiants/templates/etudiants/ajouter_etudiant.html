@@ -1,0 +1,32 @@
+{% extends 'etudiants/base.html' %}
+
+{% block content %}
+<h1 class="mb-4">Ajouter un étudiant</h1>
+
+<form method="post">
+    {% csrf_token %}
+    <div class="mb-3">
+        <label for="nom" class="form-label">Nom</label>
+        <input type="text" class="form-control" id="nom" name="nom" required>
+    </div>
+    <div class="mb-3">
+        <label for="prenom" class="form-label">Prénom</label>
+        <input type="text" class="form-control" id="prenom" name="prenom" required>
+    </div>
+    <div class="mb-3">
+        <label for="email" class="form-label">Email</label>
+        <input type="email" class="form-control" id="email" name="email" required>
+    </div>
+    <div class="mb-3">
+        <label for="contact" class="form-label">Contact</label>
+        <input type="text" class="form-control" id="contact" name="contact">
+    </div>
+    <div class="mb-3">
+        <label for="classe" class="form-label">Classe</label>
+        <input type="text" class="form-control" id="classe" name="classe" required>
+    </div>
+    <button type="submit" class="btn btn-success">Ajouter</button>
+    <a href="{% url 'etudiants:liste_etudiants' %}" class="btn btn-secondary">Annuler</a>
+</form>
+
+{% endblock %}

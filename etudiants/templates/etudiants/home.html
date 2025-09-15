@@ -1,0 +1,47 @@
+{% extends 'etudiants/base.html' %}
+
+{% block content %}
+<h1 class="mb-4">Liste des Étudiants</h1>
+
+<div class="d-flex justify-content-between mb-3">
+    <a href="{% url 'etudiants:ajouter_etudiant' %}" class="btn btn-primary">Ajouter un étudiant</a>
+</div>
+
+<table class="table table-striped">
+    <thead>
+        <tr>
+            <th>Nom</th>
+            <th>Prénom</th>
+            <th>Email</th>
+            <th>Contact</th>
+            <th>Classe</th>
+            <th>Moyenne</th>
+            <th>Moyenne_Coéf</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for etudiant in etudiants %}
+        <tr>
+            <td>{{ etudiant.nom }}</td>
+            <td>{{ etudiant.prenom }}</td>
+            <td>{{ etudiant.email }}</td>
+            <td>{{ etudiant.contact }}</td>
+            <td>{{ etudiant.classe }}</td>
+            <td>{{ etudiant.moyenne|floatformat:2 }}</td>
+            <td> {{etudiant.moyenne_Coéf|floatformat:2}}</td>
+            <td>
+                <a href="{% url 'etudiants:ajouter_note' etudiant.id %}" class="btn btn-primary btn-sm"> Voir Notes</a>
+                <a href="{% url 'etudiants:ajouter_etudiant'%}" class="btn btn-success btn-sm"> +Students </a>
+                <a href="{% url 'etudiants:detail_etudiant' etudiant.id %}" class="btn btn-info btn-sm">Détails</a>
+                <a href="{% url 'etudiants:supprimer_etudiant' etudiant.id %}" class="btn btn-danger btn-sm">Supprimer</a>
+            </td>
+        </tr>
+        {% empty %}
+        <tr>
+            <td colspan="7" class="text-center">Aucun étudiants enregistré pour le moments</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+{% endblock %}
