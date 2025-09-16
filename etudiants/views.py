@@ -34,7 +34,7 @@ def ajouter_etudiant(request):
                 sql = "INSERT INTO etudiants_user(nom, prenom, email, contact, classes, is_valid) VALUES(%s, %s, %s, %s, %s, 1)"
                 cursor.execute(sql, [nom, prenom, email, contact, classes])
 
-            return redirect('etudiants:list_etudiants')
+            return redirect('etudiants:liste_etudiants')
         else:
             message = "Veuillez vérifier que vous avez rempli tous les champs d'ajout"
             return render(request, 'etudiants/ajouter_etudiant.html', {'message': message})
