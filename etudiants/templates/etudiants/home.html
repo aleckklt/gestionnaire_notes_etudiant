@@ -1,47 +1,92 @@
 {% extends 'etudiants/base.html' %}
+{% load static %}
+
+{% block title %}Liste des Étudiants{% endblock %}
 
 {% block content %}
-<h1 class="mb-4">Liste des Étudiants</h1>
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2><i class="fas fa-users me-2"></i>Liste des Étudiants</h2>
+        <a href="{% url 'etudiants:ajouter_etudiant' %}" class="btn btn-success">
+            <i class="fas fa-plus-circle me-1"></i>Ajouter un étudiant
+        </a>
+    </div>
 
-<div class="d-flex justify-content-between mb-3">
-    <a href="{% url 'etudiants:ajouter_etudiant' %}" class="btn btn-primary">Ajouter un étudiant</a>
-</div>
-
-<table class="table table-striped">
-    <thead>
-        <tr>
-            <th>Nom</th>
-            <th>Prénom</th>
-            <th>Email</th>
-            <th>Contact</th>
-            <th>Classe</th>
-            <th>Moyenne</th>
-            <th>Moyenne_Coéf</th>
-        </tr>
-    </thead>
-    <tbody>
-        {% for etudiant in etudiants %}
-        <tr>
-            <td>{{ etudiant.nom }}</td>
-            <td>{{ etudiant.prenom }}</td>
-            <td>{{ etudiant.email }}</td>
-            <td>{{ etudiant.contact }}</td>
-            <td>{{ etudiant.classe }}</td>
-            <td>{{ etudiant.moyenne|floatformat:2 }}</td>
-            <td> {{etudiant.moyenne_Coéf|floatformat:2}}</td>
-            <td>
-                <a href="{% url 'etudiants:ajouter_note' etudiant.id %}" class="btn btn-primary btn-sm"> Voir Notes</a>
-                <a href="{% url 'etudiants:ajouter_etudiant'%}" class="btn btn-success btn-sm"> +Students </a>
-                <a href="{% url 'etudiants:detail_etudiant' etudiant.id %}" class="btn btn-info btn-sm">Détails</a>
-                <a href="{% url 'etudiants:supprimer_etudiant' etudiant.id %}" class="btn btn-danger btn-sm">Supprimer</a>
-            </td>
-        </tr>
-        {% empty %}
-        <tr>
-            <td colspan="7" class="text-center">Aucun étudiants enregistré pour le moments</td>
-        </tr>
+    {% if messages %}
+    <div class="mb-3">
+        {% for message in messages %}
+        <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+            {{ message }}
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
         {% endfor %}
-    </tbody>
-</table>
+    </div>
+    {% endif %}
 
+    <div class="card shadow-sm">
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-hover table-striped">
+                    <thead class="table-dark">
+                        <tr>
+                            <th><i class="fas fa-signature"></i> Nom</th>
+                            <th><i class="fas fa-user"></i> Prénom</th>
+                            <th><i class="fas fa-envelope"></i> Email</th>
+                            <th><i class="fas fa-phone"></i> Contact</th>
+                            <th><i class="fas fa-graduation-cap"></i> Classe</th>
+                            <th><i class="fas fa-cogs"></i> Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for etudiant in etudiants %}
+                        <tr>
+                            <td>{{ etudiant.nom }}</td>
+                            <td>{{ etudiant.prenom }}</td>
+                            <td>{{ etudiant.email }}</td>
+                            <td>{{ etudiant.contact }}</td>
+                            <td>
+                                <span class="badge bg-primary">{{ etudiant.classes }}</span>
+                            </td>
+                            <td>
+                                <div class="btn-group" role="group">
+                                    <a href="{% url 'etudiants:ajouter_note' etudiant.id %}" class="btn btn-primary btn-sm" title="Voir notes">
+                                        <i class="fas fa-sticky-note"></i>
+                                    </a>
+                                    <a href="{% url 'etudiants:detail_etudiant' etudiant.id %}" class="btn btn-info btn-sm" title="Détails">
+                                        <i class="fas fa-eye"></i>
+                                    </a>
+                                    <a href="{% url 'etudiants:supprimer_etudiant' etudiant.id %}" class="btn btn-danger btn-sm" title="Supprimer">
+                                        <i class="fas fa-trash"></i>
+                                    </a>
+                                </div>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="6" class="text-center text-muted py-4">
+                                <i class="fas fa-user-slash fa-2x mb-2"></i>
+                                <p class="mb-0">Aucun étudiant enregistré pour le moment</p>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    .table th {
+        font-weight: 600;
+    }
+    .btn-group .btn {
+        margin-right: 5px;
+    }
+    .btn-group .btn:last-child {
+        margin-right: 0;
+    }
+</style>
 {% endblock %}

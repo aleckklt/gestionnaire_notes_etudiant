@@ -1,32 +1,116 @@
 {% extends 'etudiants/base.html' %}
+{% load static %}
+
+{% block title %}Ajouter un Étudiant{% endblock %}
 
 {% block content %}
-<h1 class="mb-4">Ajouter un étudiant</h1>
+<div class="container mt-4">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card shadow-sm">
+                <div class="card-header bg-primary text-white">
+                    <h4 class="mb-0">
+                        <i class="fas fa-user-plus me-2"></i>Ajouter un Nouvel Étudiant
+                    </h4>
+                </div>
+                <div class="card-body">
+                    {% if message %}
+                    <div class="alert alert-{% if 'succès' in message %}success{% else %}warning{% endif %} alert-dismissible fade show" role="alert">
+                        <i class="fas fa-{% if 'succès' in message %}check-circle{% else %}exclamation-triangle{% endif %} me-2"></i>
+                        {{ message }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                    {% endif %}
 
-<form method="post">
-    {% csrf_token %}
-    <div class="mb-3">
-        <label for="nom" class="form-label">Nom</label>
-        <input type="text" class="form-control" id="nom" name="nom" required>
-    </div>
-    <div class="mb-3">
-        <label for="prenom" class="form-label">Prénom</label>
-        <input type="text" class="form-control" id="prenom" name="prenom" required>
-    </div>
-    <div class="mb-3">
-        <label for="email" class="form-label">Email</label>
-        <input type="email" class="form-control" id="email" name="email" required>
-    </div>
-    <div class="mb-3">
-        <label for="contact" class="form-label">Contact</label>
-        <input type="text" class="form-control" id="contact" name="contact">
-    </div>
-    <div class="mb-3">
-        <label for="classe" class="form-label">Classe</label>
-        <input type="text" class="form-control" id="classe" name="classe" required>
-    </div>
-    <button type="submit" class="btn btn-success">Ajouter</button>
-    <a href="{% url 'etudiants:liste_etudiants' %}" class="btn btn-secondary">Annuler</a>
-</form>
+                    <form method="post" novalidate>
+                        {% csrf_token %}
+                        
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label for="nom" class="form-label">
+                                    <i class="fas fa-signature me-1"></i>Nom *
+                                </label>
+                                <input type="text" class="form-control" id="nom" name="nom" required 
+                                       placeholder="Entrez le nom">
+                            </div>
+                            
+                            <div class="col-md-6 mb-3">
+                                <label for="prenom" class="form-label">
+                                    <i class="fas fa-user me-1"></i>Prénom *
+                                </label>
+                                <input type="text" class="form-control" id="prenom" name="prenom" required 
+                                       placeholder="Entrez le prénom">
+                            </div>
+                        </div>
 
+                        <div class="mb-3">
+                            <label for="email" class="form-label">
+                                <i class="fas fa-envelope me-1"></i>Email *
+                            </label>
+                            <input type="email" class="form-control" id="email" name="email" required 
+                                   placeholder="exemple@email.com">
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="contact" class="form-label">
+                                <i class="fas fa-phone me-1"></i>Contact *
+                            </label>
+                            <input type="tel" class="form-control" id="contact" name="contact" required 
+                                   placeholder="Numéro de téléphone">
+                        </div>
+
+                        <div class="mb-4">
+                            <label for="classe" class="form-label">
+                                <i class="fas fa-graduation-cap me-1"></i>Classe *
+                            </label>
+                            <select class="form-select" id="classe" name="classe" required>
+                                <option value="" selected disabled>Sélectionnez une classe</option>
+                                <option value="CSS">CSS</option>
+                                <option value="Bootstrap">Bootstrap</option>
+                                <option value="Django">Django</option>
+                                <option value="Python">Python</option>
+                                <option value="SQL">SQL</option>
+                            </select>
+                        </div>
+
+                        <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                            <a href="{% url 'etudiants:liste_etudiants' %}" class="btn btn-secondary me-md-2">
+                                <i class="fas fa-arrow-left me-1"></i>Retour
+                            </a>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save me-1"></i>Enregistrer
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const form = document.querySelector('form');
+        form.addEventListener('submit', function(e) {
+            let isValid = true;
+            const requiredFields = form.querySelectorAll('[required]');
+            
+            requiredFields.forEach(field => {
+                if (!field.value.trim()) {
+                    isValid = false;
+                    field.classList.add('is-invalid');
+                } else {
+                    field.classList.remove('is-invalid');
+                }
+            });
+            
+            if (!isValid) {
+                e.preventDefault();
+                alert('Veuillez remplir tous les champs obligatoires (*)');
+            }
+        });
+    });
+</script>
 {% endblock %}

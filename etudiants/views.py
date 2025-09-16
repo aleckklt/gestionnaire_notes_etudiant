@@ -2,11 +2,24 @@
 from django.shortcuts import render, redirect
 from .models import User, notes
 from django .db import connection
-from .forms import etudiantsForm
 
 def list_etudiants(request):
-    liste = User.objects.raw('SELECT * FROM User WHERE is_valid = True')
-    return render(request, 'etudiants/home.html', {'liste' : liste})
+    with connection.cursor() as cursor :
+        cursor.execute("SELECT id, nom, prenom, email, contact, classes FROM etudiants_user")
+        rows = cursor.fetchall()
+        
+    etudiants = []
+    for r in rows:
+        etudiants.append({
+            'id': r[0],
+            'nom': r[1],
+            'prenom': r[2],
+            'email': r[3],
+            'contact': r[4],
+            'classes': r[5],
+            })
+
+    return render(request, 'etudiants/home.html', {'etudiants':etudiants})
 
 def ajouter_etudiant(request):
     if request.method == 'POST':
@@ -17,13 +30,20 @@ def ajouter_etudiant(request):
         classes = request.POST.get('classe')
     
         if nom and prenom and email and contact and classes:
-            with connection.cursor() as cursor :
-                sql = "INSERT INTO etudiants_user(nom, prenom, email, contact, classes) VALUES(%s, %s, %s, %s, %s)"
+            with connection.cursor() as cursor:
+                sql = "INSERT INTO etudiants_user(nom, prenom, email, contact, classes, is_valid) VALUES(%s, %s, %s, %s, %s, 1)"
                 cursor.execute(sql, [nom, prenom, email, contact, classes])
-                message = "L'étudiant a été ajouté avec succès"
+
+            return redirect('etudiants:list_etudiants')
         else:
             message = "Veuillez vérifier que vous avez rempli tous les champs d'ajout"
-    else:
-        message = "Etudiant ajouté"
+            return render(request, 'etudiants/ajouter_etudiant.html', {'message': message})
+        
+    return render(request, 'etudiants/ajouter_etudiant.html')
 
-    return render(request, 'etudiants/ajouter_etudiant.html', {'message':message})
+def detail_etudiants(request, etudiant_id) :
+    return()
+def ajouter_notes(request, etudiant_id):
+    return()
+def supprimer_etudiants(request, etudiant_id):
+    return()
