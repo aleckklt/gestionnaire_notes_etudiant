@@ -2,6 +2,7 @@
 from django.shortcuts import render, redirect
 from .models import User, notes
 from django .db import connection
+from django.contrib import messages
 
 def list_etudiants(request):
     with connection.cursor() as cursor :
@@ -46,4 +47,15 @@ def detail_etudiants(request, etudiant_id) :
 def ajouter_notes(request, etudiant_id):
     return()
 def supprimer_etudiants(request, etudiant_id):
-    return()
+    if request.method == 'POST' :
+        try:
+            with connection.cursor() as cursor :
+                cursor.execute("DELETE FROM etudiants_user WHERE id = %s", [etudiant_id])
+                messages.success(request, "Étudiants supprimé avec succès")
+                return redirect('etudiants:liste_etudiants')
+        except Exception as e:
+            messages.error(request, f"Erreur lors de la suppression: {str(e)}")
+            return redirect('etudiants:liste_etudiants')
+    else :
+        return render(request, 'etudiants/supprimer_etudiant.html', {'etudiant_id':etudiant_id})
+
