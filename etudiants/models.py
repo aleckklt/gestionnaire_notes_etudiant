@@ -18,6 +18,7 @@ class notes(models.Model):
     noted = models.IntegerField()
     noted_by = models.BooleanField(default=False)
     note_time = models.DateTimeField(auto_now_add=True)
+    classes = models.TextField(blank=True, null=True)
 
     def __str__(self):
         self.note
