@@ -33,7 +33,6 @@
                             <th><i class="fas fa-user"></i> Prénom</th>
                             <th><i class="fas fa-envelope"></i> Email</th>
                             <th><i class="fas fa-phone"></i> Contact</th>
-                            <th><i class="fas fa-graduation-cap"></i> Classe</th>
                             <th><i class="fas fa-cogs"></i> Actions</th>
                         </tr>
                     </thead>
@@ -44,9 +43,6 @@
                             <td>{{ etudiant.prenom }}</td>
                             <td>{{ etudiant.email }}</td>
                             <td>{{ etudiant.contact }}</td>
-                            <td>
-                                <span class="badge bg-primary">{{ etudiant.classes }}</span>
-                            </td>
                             <td>
                                 <div class="btn-group" role="group">
                                     <a href="{% url 'etudiants:ajouter_note' etudiant.id %}" class="btn btn-primary btn-sm" title="Voir notes">

@@ -6,7 +6,7 @@ from django.contrib import messages
 
 def list_etudiants(request):
     with connection.cursor() as cursor :
-        cursor.execute("SELECT id, nom, prenom, email, contact, classes FROM etudiants_user")
+        cursor.execute("SELECT id, nom, prenom, email, contact FROM etudiants_user")
         rows = cursor.fetchall()
         
     etudiants = []
@@ -17,7 +17,6 @@ def list_etudiants(request):
             'prenom': r[2],
             'email': r[3],
             'contact': r[4],
-            'classes': r[5],
             })
 
     return render(request, 'etudiants/home.html', {'etudiants':etudiants})
@@ -28,12 +27,11 @@ def ajouter_etudiant(request):
         prenom = request.POST.get('prenom')
         email = request.POST.get('email')
         contact = request.POST.get('contact')
-        classes = request.POST.get('classe')
     
-        if nom and prenom and email and contact and classes:
+        if nom and prenom and email and contact :
             with connection.cursor() as cursor:
                 sql = "INSERT INTO etudiants_user(nom, prenom, email, contact, classes, is_valid) VALUES(%s, %s, %s, %s, %s, 1)"
-                cursor.execute(sql, [nom, prenom, email, contact, classes])
+                cursor.execute(sql, [nom, prenom, email, contact])
 
             return redirect('etudiants:liste_etudiants')
         else:

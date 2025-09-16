@@ -5,7 +5,6 @@ class User(models.Model) :
     prenom = models.CharField(max_length=100)
     email = models.EmailField()
     contact = models.TextField(blank=True, null=True)
-    classes = models.TextField(blank=True, null=True)
     is_valid = models.BooleanField(default=False, null=True)
 
     def __str__(self) :
