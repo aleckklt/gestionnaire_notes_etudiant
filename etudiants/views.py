@@ -30,18 +30,18 @@ def ajouter_etudiant(request):
     
         if nom and prenom and email and contact :
             with connection.cursor() as cursor:
-                sql = "INSERT INTO etudiants_user(nom, prenom, email, contact, classes, is_valid) VALUES(%s, %s, %s, %s, %s, 1)"
+                sql = "INSERT INTO etudiants_user(nom, prenom, email, contact, is_valid) VALUES(%s, %s, %s, %s, 1)"
                 cursor.execute(sql, [nom, prenom, email, contact])
-
+                message = "Étudiants ajouté avec succès"
             return redirect('etudiants:liste_etudiants')
-        else:
-            message = "Veuillez vérifier que vous avez rempli tous les champs d'ajout"
-            return render(request, 'etudiants/ajouter_etudiant.html', {'message': message})
-        
-    return render(request, 'etudiants/ajouter_etudiant.html')
+        message = "Veuillez vérifier que vous avez rempli tous les champs d'ajout"
+    message = None
+    return render(request, 'etudiants/ajouter_etudiant.html', {'message': message})
 
 def detail_etudiants(request, etudiant_id) :
     return()
+def voir_note_and_avg(request, etudiant_id) :
+    return ()
 def ajouter_notes(request, etudiant_id):
     return()
 def supprimer_etudiants(request, etudiant_id):
