@@ -55,7 +55,7 @@ def detail_etudiants(request, etudiant_id):
     cursor.execute("""
         SELECT matiere, interrogation, devoir, devoirs, coefficent 
         FROM etudiants_notes 
-        WHERE id = %s
+        WHERE note_id = %s
     """, [etudiant_id])
     notes_data = cursor.fetchall()
     notes_dict = {row[0]: row for row in notes_data}
@@ -106,6 +106,9 @@ def detail_etudiants(request, etudiant_id):
         'moyenne_generale': moyenne_generale,
         'moyenne_ponderee': moyenne_ponderee
     })
+
+def ajouter_notes(request, etudiant_id):
+    return()
 
 def supprimer_etudiants(request, etudiant_id):
     if request.method == 'POST' :
