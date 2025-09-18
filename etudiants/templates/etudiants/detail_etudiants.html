@@ -1,0 +1,49 @@
+{% extends 'etudiants/base.html' %}
+{% block content %}
+<div class="container mt-5">
+    {% if etudiant %}
+        <h2>Détails de l'étudiant : {{ etudiant.2 }} {{ etudiant.1 }}</h2>
+        <ul class="list-group my-3">
+            <li class="list-group-item"><strong>Email :</strong> {{ etudiant.3 }}</li>
+            <li class="list-group-item"><strong>Contact :</strong> {{ etudiant.4 }}</li>
+        </ul>
+
+        <h4 class="mt-4">Notes par matière</h4>
+        <table class="table table-bordered mt-3">
+            <thead class="table-light">
+                <tr>
+                    <th>Matière</th>
+                    <th>Interrogation</th>
+                    <th>Devoir</th>
+                    <th>Devoirs</th>
+                    <th>Moyenne</th>
+                    <th>Coefficient</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for note in notes_par_matiere %}
+                <tr>
+                    <td>{{ note.matiere }}</td>
+                    <td>{{ note.interrogation }}</td>
+                    <td>{{ note.devoir }}</td>
+                    <td>{{ note.devoirs }}</td>
+                    <td>{{ note.moyenne }}</td>
+                    <td>{{ note.coeff }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+
+        <div class="mt-4">
+            <p><strong>Moyenne générale :</strong> {{ moyenne_generale }}</p>
+            <p><strong>Moyenne pondérée :</strong> {{ moyenne_ponderee }}</p>
+        </div>
+
+        <a href="{% url 'etudiants:liste_etudiants' %}" class="btn btn-secondary mt-3">Retour à la liste</a>
+    {% else %}
+        <div class="alert alert-danger">
+            Aucune donnée trouvée pour cet étudiant.
+        </div>
+    {% endif %}
+</div>
+{% endblock %}

@@ -1,24 +1,36 @@
 from django.db import models
+from django.utils import timezone
+
 
 class User(models.Model) :
     nom = models.CharField(max_length=100)
     prenom = models.CharField(max_length=100)
-    email = models.EmailField()
-    contact = models.TextField(blank=True, null=True)
+    email = models.EmailField(unique=True)
+    contact = models.TextField(max_length=15, blank=True, null=True)
     is_valid = models.BooleanField(default=False, null=True)
 
     def __str__(self) :
-        self.nom
+        return f"{self.nom} {self.prenom}"
 
     class Meta :
         ordering = ["-nom"]
 
 class notes(models.Model):
-    note = models.ForeignKey(User, on_delete= models.CASCADE)
-    noted = models.IntegerField()
-    noted_by = models.BooleanField(default=False)
-    note_time = models.DateTimeField(auto_now_add=True)
-    classes = models.TextField(blank=True, null=True)
+    MATIERE_CHOICES = [
+        ('Django', 'Django'),
+        ('Python', 'Python'),
+        ('CSS', 'CSS'),
+        ('Bootstrap', 'Bootstrap'),
+        ('SQL', 'SQL'),
+    ]
+
+    etudiant = models.ForeignKey(User, on_delete=models.CASCADE, related_name='notes')
+    matiere = models.CharField(max_length=20, choices=MATIERE_CHOICES)
+    interrogation = models.FloatField(null=True, blank=True)
+    devoir = models.FloatField(null=True, blank=True)
+    devoirs = models.FloatField(null=True, blank=True)
+    coefficent = models.PositiveIntegerField(default=1)
+    date_note = models.DateTimeField(auto_now_add=True)
 
     def __str__(self):
-        self.note
+        return f"{self.etudiant} - {self.matiere}"
