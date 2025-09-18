@@ -38,10 +38,6 @@ def ajouter_etudiant(request):
         message = "Veuillez vérifier que vous avez rempli tous les champs d'ajout"
     return render(request, 'etudiants/ajouter_etudiant.html', {'message': message})
 
-from django.shortcuts import render
-from django.db import connection
-from django.contrib import messages
-
 def detail_etudiants(request, etudiant_id):
     cursor = connection.cursor()
     cursor.execute("""
@@ -111,10 +107,6 @@ def detail_etudiants(request, etudiant_id):
         'moyenne_ponderee': moyenne_ponderee
     })
 
-def voir_note_and_avg(request, etudiant_id) :
-    return ()
-def ajouter_notes(request, etudiant_id):
-    return()
 def supprimer_etudiants(request, etudiant_id):
     if request.method == 'POST' :
         try:
