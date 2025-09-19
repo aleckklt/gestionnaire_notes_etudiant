@@ -24,7 +24,7 @@ class notes(models.Model):
         ('SQL', 'SQL'),
     ]
 
-    note = models.ForeignKey(User, on_delete=models.CASCADE, related_name='notes')
+    note = models.ForeignKey(User, on_delete=models.CASCADE)
     matiere = models.CharField(max_length=20, choices=MATIERE_CHOICES)
     interrogation = models.FloatField(null=True, blank=True)
     devoir = models.FloatField(null=True, blank=True)
