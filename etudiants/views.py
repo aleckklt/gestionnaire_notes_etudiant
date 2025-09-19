@@ -1,6 +1,5 @@
 
 from django.shortcuts import render, redirect
-from .models import User, notes
 from django .db import connection
 from django.contrib import messages
 
@@ -106,9 +105,6 @@ def detail_etudiants(request, etudiant_id):
         'moyenne_generale': moyenne_generale,
         'moyenne_ponderee': moyenne_ponderee
     })
-
-def ajouter_notes(request, etudiant_id):
-    return()
 
 def supprimer_etudiants(request, etudiant_id):
     if request.method == 'POST' :

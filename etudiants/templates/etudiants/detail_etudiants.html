@@ -9,30 +9,42 @@
         </ul>
 
         <h4 class="mt-4">Notes par matière</h4>
-        <table class="table table-bordered mt-3">
-            <thead class="table-light">
-                <tr>
-                    <th>Matière</th>
-                    <th>Interrogation</th>
-                    <th>Devoir</th>
-                    <th>Devoirs</th>
-                    <th>Moyenne</th>
-                    <th>Coefficient</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for note in notes_par_matiere %}
-                <tr>
-                    <td>{{ note.matiere }}</td>
-                    <td>{{ note.interrogation }}</td>
-                    <td>{{ note.devoir }}</td>
-                    <td>{{ note.devoirs }}</td>
-                    <td>{{ note.moyenne }}</td>
-                    <td>{{ note.coeff }}</td>
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
+
+        <form method="POST">
+            {% csrf_token %}
+            <input type="hidden" name="nb_matieres" value="{{ notes_par_matiere|length }}">
+            <table class="table table-bordered mt-3" id="notesTable">
+                <thead class="table-light">
+                    <tr>
+                        <th>Matière</th>
+                        <th>Interrogation 1</th>
+                        <th>Interrogation 2</th>
+                        <th>Devoir</th>
+                        <th>Moyenne</th>
+                        <th>Coefficient</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for note in notes_par_matiere %}
+                    <tr data-index="{{ forloop.counter }}">
+                        <td>
+                            {{ note.matiere }}
+                            <input type="hidden" name="matiere_{{ forloop.counter }}" value="{{ note.matiere }}">
+                        </td>
+                        <td contenteditable="true" class="note-cell" data-field="interrogation">{{ note.interrogation }}</td>
+                        <td contenteditable="true" class="note-cell" data-field="devoir">{{ note.devoir }}</td>
+                        <td contenteditable="true" class="note-cell" data-field="devoirs">{{ note.devoirs }}</td>
+                        <td class="moyenne-cell">{{ note.moyenne }}</td>
+                        <td contenteditable="true" class="note-cell" data-field="coeff">{{ note.coeff }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+
+            <div id="hidden-inputs"></div>
+
+            <button type="submit" class="btn btn-success mt-3">Enregistrer les modifications</button>
+        </form>
 
         <div class="mt-4">
             <p><strong>Moyenne générale :</strong> {{ moyenne_generale }}</p>
@@ -40,6 +52,56 @@
         </div>
 
         <a href="{% url 'etudiants:liste_etudiants' %}" class="btn btn-primary mt-3">Retour à la liste</a>
+
+        <script>
+            document.addEventListener('DOMContentLoaded', () => {
+                const table = document.getElementById('notesTable');
+                const hiddenInputsDiv = document.getElementById('hidden-inputs');
+
+                function updateHiddenInput(name, value) {
+                    let input = document.querySelector(`input[name="${name}"]`);
+                    if (!input) {
+                        input = document.createElement('input');
+                        input.type = 'hidden';
+                        input.name = name;
+                        hiddenInputsDiv.appendChild(input);
+                    }
+                    input.value = value;
+                }
+
+                function parseFloatSafe(value) {
+                    const num = parseFloat(value);
+                    return isNaN(num) ? 0 : num;
+                }
+
+                function updateRowMoyenne(row, index) {
+                    const interrogation = parseFloatSafe(row.querySelector('[data-field="interrogation"]').innerText);
+                    const devoir = parseFloatSafe(row.querySelector('[data-field="devoir"]').innerText);
+                    const devoirs = parseFloatSafe(row.querySelector('[data-field="devoirs"]').innerText);
+                    const coeff = parseFloatSafe(row.querySelector('[data-field="coeff"]').innerText);
+
+                    const moyenne = ((interrogation + devoir + devoirs) / 3).toFixed(2);
+                    row.querySelector('.moyenne-cell').innerText = moyenne;
+                    updateHiddenInput(`interrogation_${index}`, interrogation);
+                    updateHiddenInput(`devoir_${index}`, devoir);
+                    updateHiddenInput(`devoirs_${index}`, devoirs);
+                    updateHiddenInput(`coeff_${index}`, coeff);
+                }
+
+                table.querySelectorAll('tr[data-index]').forEach(row => {
+                    const index = row.dataset.index;
+
+                    updateRowMoyenne(row, index);
+
+                    row.querySelectorAll('.note-cell').forEach(cell => {
+                        cell.addEventListener('input', () => {
+                            updateRowMoyenne(row, index);
+                        });
+                    });
+                });
+            });
+        </script>
+
     {% else %}
         <div class="alert alert-danger">
             Aucune donnée trouvée pour cet étudiant.
