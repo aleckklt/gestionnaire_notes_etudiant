@@ -41,7 +41,7 @@ def detail_etudiants(request, etudiant_id):
     
     with connection.cursor() as cursor:
         cursor.execute("""
-            SELECT id, nom, prenom, email, contact 
+            SELECT id, nom, prenom, email, contact
             FROM etudiants_user 
             WHERE id = %s
         """, [etudiant_id])
@@ -91,21 +91,20 @@ def detail_etudiants(request, etudiant_id):
                 with connection.cursor() as cursor:
                     cursor.execute("""
                         SELECT id FROM etudiants_notes
-                        WHERE note_id = %s AND matiere = %s
-                    """, [etudiant_id, matiere])
+                        WHERE note_id = %s
+                    """, [etudiant_id])
                     exists = cursor.fetchall()
-
                     if exists:
                         cursor.execute("""
                             UPDATE etudiants_notes
                             SET interrogation1 = %s, interrogation2 = %s, devoir = %s, coefficients = %s
                             WHERE note_id = %s AND matiere = %s
-                        """, [interrogation1, interrogation2, devoir, etudiant_id, matiere, coefficients])
+                        """, [interrogation1, interrogation2, devoir,coefficients, etudiant_id, matiere])
                     else:
                         cursor.execute("""
                             INSERT INTO etudiants_notes (note_id, matiere, interrogation1, interrogation2, devoir, coefficients)
                             VALUES (%s, %s, %s, %s, %s, %s)
-                        """, [etudiant_id, matiere, interrogation1, interrogation2, devoir, coefficients])
+                        """,[interrogation1, interrogation2, devoir,coefficients, etudiant_id, matiere])
 
         moyenne_generale = round(total_moyenne / nb_matieres, 2) if nb_matieres else 0
         moyenne_ponderee = round(total_ponderee / total_coeff, 2) if total_coeff else 0
@@ -148,7 +147,7 @@ def detail_etudiants(request, etudiant_id):
                     'interrogation1': interrogation1,
                     'devoir': devoir,
                     'interrogation2': interrogation2,
-                    'coeff': coefficients,
+                    'coefficients': coefficients,
                     'moyenne': moyenne
                 })
             else:
