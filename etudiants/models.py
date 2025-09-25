@@ -13,9 +13,9 @@ class User(models.Model):
 
     class Meta:
         ordering = ["-nom"]
-        
+
 class Notes(models.Model):
-    note = models.ForeignKey(User, on_delete=models.CASCADE, related_name="notes")
+    note = models.ForeignKey(User, on_delete=models.CASCADE)
     interrogation1 = models.FloatField(null=True, blank=True)
     interrogation2 = models.FloatField(null=True, blank=True)
     devoir = models.FloatField(null=True, blank=True)

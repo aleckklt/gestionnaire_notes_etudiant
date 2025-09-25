@@ -170,16 +170,3 @@ def detail_etudiants(request, etudiant_id):
         'moyenne_ponderee': moyenne_ponderee
     })
 
-def supprimer_etudiants(request, etudiant_id):
-    if request.method == 'POST' :
-        try:
-            with connection.cursor() as cursor :
-                cursor.execute("DELETE FROM etudiants_user WHERE id = %s", [etudiant_id])
-                messages.success(request, "Étudiants supprimé avec succès")
-                return redirect('etudiants:liste_etudiants')
-        except Exception as e:
-            messages.error(request, f"Erreur lors de la suppression: {str(e)}")
-            return redirect('etudiants:liste_etudiants')
-    else :
-        return render(request, 'etudiants/home.html', {'etudiant_id':etudiant_id})
-
