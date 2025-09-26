@@ -28,13 +28,20 @@ def ajouter_etudiant(request):
         email = request.POST.get('email')
         contact = request.POST.get('contact')
     
-        if nom and prenom and email and contact :
+        if nom and prenom and email and contact:
             with connection.cursor() as cursor:
-                sql = "INSERT INTO etudiants_user(nom, prenom, email, contact, is_valid) VALUES(%s, %s, %s, %s, 1)"
-                cursor.execute(sql, [nom, prenom, email, contact])
-                message = "Étudiants ajouté avec succès"
-            return redirect('etudiants:liste_etudiants')
-        message = "Veuillez vérifier que vous avez rempli tous les champs d'ajout"
+                cursor.execute("SELECT COUNT(*) FROM etudiants_user WHERE email = %s", [email])
+                count = cursor.fetchone()[0]
+                if count > 0:
+                    message = "Un étudiant avec cet email existe déjà."
+                else:
+                    sql = "INSERT INTO etudiants_user(nom, prenom, email, contact, is_valid) VALUES(%s, %s, %s, %s, 1)"
+                    cursor.execute(sql, [nom, prenom, email, contact])
+                    messages.success(request, "Étudiant ajouté avec succès.")
+                    return redirect('etudiants:liste_etudiants')
+        else:
+            message = "Veuillez remplir tous les champs."
+
     return render(request, 'etudiants/ajouter_etudiant.html', {'message': message})
 
 def detail_etudiants(request, etudiant_id):
