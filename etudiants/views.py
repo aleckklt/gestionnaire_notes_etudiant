@@ -58,7 +58,7 @@ def detail_etudiants(request, etudiant_id):
         messages.error(request, "Étudiant introuvable.")
         return render(request, 'etudiants/detail_etudiants.html', {'etudiant': None})
 
-    matieres_fixes = ['Django', 'Python', 'CSS', 'Bootstrap', 'SQL']
+    matieres_fixes = ['Python', 'Django', 'CSS', 'Bootstrap', 'SQL']
     notes_par_matiere = []
     moyenne_generale = 0
     moyenne_ponderee = 0
@@ -176,4 +176,3 @@ def detail_etudiants(request, etudiant_id):
         'moyenne_generale': moyenne_generale,
         'moyenne_ponderee': moyenne_ponderee
     })
-
