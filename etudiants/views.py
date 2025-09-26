@@ -98,8 +98,8 @@ def detail_etudiants(request, etudiant_id):
                 with connection.cursor() as cursor:
                     cursor.execute("""
                         SELECT id FROM etudiants_notes
-                        WHERE note_id = %s
-                    """, [etudiant_id])
+                        WHERE note_id = %s AND matiere = %s
+                    """, [etudiant_id, matiere])
                     exists = cursor.fetchall()
                     if exists:
                         cursor.execute("""
@@ -111,7 +111,7 @@ def detail_etudiants(request, etudiant_id):
                         cursor.execute("""
                             INSERT INTO etudiants_notes (note_id, matiere, interrogation1, interrogation2, devoir, coefficients)
                             VALUES (%s, %s, %s, %s, %s, %s)
-                        """,[interrogation1, interrogation2, devoir,coefficients, etudiant_id, matiere])
+                        """,[etudiant_id, matiere, interrogation1, interrogation2, devoir, coefficients])
 
         moyenne_generale = round(total_moyenne / nb_matieres, 2) if nb_matieres else 0
         moyenne_ponderee = round(total_ponderee / total_coeff, 2) if total_coeff else 0
