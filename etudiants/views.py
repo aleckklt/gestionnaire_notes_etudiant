@@ -1,11 +1,25 @@
-
 from django.shortcuts import render, redirect
 from django .db import connection
 from django.contrib import messages
 
 def list_etudiants(request):
-    with connection.cursor() as cursor :
-        cursor.execute("SELECT id, nom, prenom, email, contact FROM etudiants_user")
+    if request.method == 'POST':
+        etudiant_id = request.POST.get('etudiant_id')
+        action = request.POST.get('action')
+        
+        if etudiant_id and action:
+            with connection.cursor() as cursor:
+                if action == 'desactiver':
+                    cursor.execute("UPDATE etudiants_user SET is_valid = 0 WHERE id = %s", [etudiant_id])
+                    messages.success(request, "Étudiant désactivé avec succès.")
+                elif action == 'activer':
+                    cursor.execute("UPDATE etudiants_user SET is_valid = 1 WHERE id = %s", [etudiant_id])
+                    messages.success(request, "Étudiant activé avec succès.")
+            
+            return redirect('etudiants:liste_etudiants')
+
+    with connection.cursor() as cursor:
+        cursor.execute("SELECT id, nom, prenom, email, contact, is_valid FROM etudiants_user")
         rows = cursor.fetchall()
         
     etudiants = []
@@ -16,7 +30,8 @@ def list_etudiants(request):
             'prenom': r[2],
             'email': r[3],
             'contact': r[4],
-            })
+            'is_valid': r[5]
+        })
 
     return render(request, 'etudiants/home.html', {'etudiants':etudiants})
 
@@ -35,7 +50,7 @@ def ajouter_etudiant(request):
                 if count > 0:
                     message = "Un étudiant avec cet email existe déjà."
                 else:
-                    sql = "INSERT INTO etudiants_user(nom, prenom, email, contact, is_valid) VALUES(%s, %s, %s, %s, 1)"
+                    sql = "INSERT INTO etudiants_user(nom, prenom, email, contact, is_valid) VALUES(%s, %s, %s, %s, 0)"
                     cursor.execute(sql, [nom, prenom, email, contact])
                     messages.success(request, "Étudiant ajouté avec succès.")
                     return redirect('etudiants:liste_etudiants')
@@ -48,7 +63,7 @@ def detail_etudiants(request, etudiant_id):
     
     with connection.cursor() as cursor:
         cursor.execute("""
-            SELECT id, nom, prenom, email, contact
+            SELECT id, nom, prenom, email, contact, is_valid
             FROM etudiants_user 
             WHERE id = %s
         """, [etudiant_id])
