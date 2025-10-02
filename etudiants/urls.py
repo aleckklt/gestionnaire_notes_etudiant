@@ -12,4 +12,5 @@ urlpatterns = [
     path('api/etudiants/<int:etudiant_id>/desactiver/', views.api_desactiver_etudiant, name='api_desactiver_etudiant'),
     path('api/etudiants/<int:etudiant_id>/activer/', views.api_activer_etudiant, name='api_activer_etudiant'),
     path('api/etudiants/<int:etudiant_id>/detail/', views.api_detail_etudiant, name='api_detail_etudiant'),
+    path('api/etudiants/<int:etudiant_id>/modifier_notes/', views.api_modifier_notes_etudiant, name='api_modifier'),   
 ]

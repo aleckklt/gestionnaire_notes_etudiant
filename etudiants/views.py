@@ -4,7 +4,7 @@ from django.contrib import messages
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from rest_framework import status
-from .serializers import UserSerializer, NotesSerializer
+from .serializers import UserSerializer
 
 def list_etudiants(request):
     if request.method == 'POST':
@@ -231,7 +231,7 @@ def api_create_etudiant(request):
             count = cursor.fetchone()[0]
             if count > 0:
                 return Response(
-                    {'error': 'Un étudiant avec cet email existe déjà.'}, 
+                    {'error': 'Un étudiant avec cet email existe déjà. An etudiant with this email already exists.'}, 
                     status=status.HTTP_400_BAD_REQUEST
                 )
             
@@ -245,7 +245,6 @@ def api_create_etudiant(request):
 
 @api_view(['POST'])
 def api_desactiver_etudiant(request, etudiant_id):
-    """POST: Désactiver un étudiant"""
     with connection.cursor() as cursor:
         cursor.execute("SELECT id, nom FROM etudiants_user WHERE id = %s", [etudiant_id])
         etudiant = cursor.fetchone()
@@ -355,3 +354,108 @@ def api_detail_etudiant(request, etudiant_id):
     }
 
     return Response(response_data, status=status.HTTP_200_OK)
+
+@api_view(['PATCH'])
+def api_modifier_notes_etudiant(request, etudiant_id):
+    with connection.cursor() as cursor:
+        cursor.execute("SELECT id FROM etudiants_user WHERE id = %s", [etudiant_id])
+        etudiant = cursor.fetchone()
+        
+        if not etudiant:
+            return Response(
+                {'error': 'Étudiant non trouvé'},
+                status=status.HTTP_404_NOT_FOUND
+            )
+    
+    notes_data = request.data.get('notes', [])
+    
+    try:
+        with connection.cursor() as cursor:
+            for note in notes_data:
+                matiere = note.get('matiere')
+                interrogation1 = note.get('interrogation1', 0)
+                interrogation2 = note.get('interrogation2', 0)
+                devoir = note.get('devoir', 0)
+                coefficients = note.get('coefficients', 1)
+               
+                cursor.execute("""
+                    SELECT id FROM etudiants_notes 
+                    WHERE note_id = %s AND matiere = %s
+                """, [etudiant_id, matiere])
+                exists = cursor.fetchone()
+                
+                if exists:
+                    cursor.execute("""
+                        UPDATE etudiants_notes 
+                        SET interrogation1 = %s, interrogation2 = %s, devoir = %s, coefficients = %s
+                        WHERE note_id = %s AND matiere = %s
+                    """, [interrogation1, interrogation2, devoir, coefficients, etudiant_id, matiere])
+                else:
+                    cursor.execute("""
+                        INSERT INTO etudiants_notes (note_id, matiere, interrogation1, interrogation2, devoir, coefficients)
+                        VALUES (%s, %s, %s, %s, %s, %s)
+                    """, [etudiant_id, matiere, interrogation1, interrogation2, devoir, coefficients])
+
+            matieres_fixes = ['Python', 'Django', 'CSS', 'Bootstrap', 'SQL']
+            notes_par_matiere = []
+            total_moyenne = 0
+            total_ponderee = 0
+            total_coeff = 0
+
+            for matiere in matieres_fixes:
+                cursor.execute("""
+                    SELECT matiere, interrogation1, interrogation2, devoir, coefficients
+                    FROM etudiants_notes 
+                    WHERE note_id = %s AND matiere = %s
+                """, [etudiant_id, matiere])
+                note_data = cursor.fetchone()
+                
+                if note_data:
+                    interrogation1, interrogation2, devoir, coefficients = note_data[1], note_data[2], note_data[3], note_data[4]
+                    interrogation1 = interrogation1 or 0
+                    devoir = devoir or 0
+                    interrogation2 = interrogation2 or 0
+                    coefficients = coefficients or 1
+                    moyenne = round((interrogation1 + devoir + interrogation2) / 3, 2)
+                    moyenne_ponderee_calc = moyenne * coefficients
+
+                    total_moyenne += moyenne
+                    total_ponderee += moyenne_ponderee_calc
+                    total_coeff += coefficients
+
+                    notes_par_matiere.append({
+                        'matiere': matiere,
+                        'interrogation1': interrogation1,
+                        'devoir': devoir,
+                        'interrogation2': interrogation2,
+                        'coefficients': coefficients,
+                        'moyenne': moyenne
+                    })
+                else:
+                    notes_par_matiere.append({
+                        'matiere': matiere,
+                        'interrogation1': 0,
+                        'devoir': 0,
+                        'interrogation2': 0,
+                        'coefficients': 1,
+                        'moyenne': 0
+                    })
+            
+            moyenne_generale = round(total_moyenne / len(notes_par_matiere), 2) if notes_par_matiere else 0
+            moyenne_ponderee = round(total_ponderee / total_coeff, 2) if total_coeff else 0
+            
+            response_data = {
+                'message': 'Notes modifiées avec succès',
+                'etudiant_id': etudiant_id,
+                'notes_par_matiere': notes_par_matiere,
+                'moyenne_generale': moyenne_generale,
+                'moyenne_ponderee': moyenne_ponderee
+            }
+            
+            return Response(response_data, status=status.HTTP_200_OK)
+            
+    except Exception as e:
+        return Response(
+            {'error': f'Erreur lors de la modification des notes: {str(e)}'},
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR
+        )
