@@ -196,23 +196,8 @@ def detail_etudiants(request, etudiant_id):
         'moyenne_ponderee': moyenne_ponderee
     })
 
-@api_view(['GET', 'POST'])
-def etudiant_list_api(request):
-    if request.method == 'POST':
-        etudiant_id = request.data.get('etudiant_id')
-        action = request.data.get('action')
-        
-        if etudiant_id and action:
-            with connection.cursor() as cursor:
-                if action == 'desactiver':
-                    cursor.execute("UPDATE etudiants_user SET is_valid = 0 WHERE id = %s", [etudiant_id])
-                    return Response({'message': 'Étudiant désactivé avec succès'}, status=status.HTTP_200_OK)
-                elif action == 'activer':
-                    cursor.execute("UPDATE etudiants_user SET is_valid = 1 WHERE id = %s", [etudiant_id])
-                    return Response({'message': 'Étudiant activé avec succès'}, status=status.HTTP_200_OK)
-            
-            return Response({'error': 'Action invalide'}, status=status.HTTP_400_BAD_REQUEST)
-
+@api_view(['GET'])
+def api_list_etudiants(request):
     with connection.cursor() as cursor:
         cursor.execute("SELECT id, nom, prenom, email, contact, is_valid FROM etudiants_user")
         rows = cursor.fetchall()
@@ -232,7 +217,7 @@ def etudiant_list_api(request):
     return Response(serializer.data, status=status.HTTP_200_OK)
 
 @api_view(['POST'])
-def ajouter_etudiant_api(request):
+def api_create_etudiant(request):
     serializer = UserSerializer(data=request.data)
     if serializer.is_valid():
         nom = serializer.validated_data['nom']
@@ -258,8 +243,41 @@ def ajouter_etudiant_api(request):
         return Response(serializer.data, status=status.HTTP_201_CREATED)
     return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-@api_view(['GET', 'POST'])
-def detail_etudiants_api(request, etudiant_id):
+@api_view(['POST'])
+def api_desactiver_etudiant(request, etudiant_id):
+    """POST: Désactiver un étudiant"""
+    with connection.cursor() as cursor:
+        cursor.execute("SELECT id, nom FROM etudiants_user WHERE id = %s", [etudiant_id])
+        etudiant = cursor.fetchone()
+        
+        if not etudiant:
+            return Response({'error': 'Étudiant non trouvé'}, status=status.HTTP_404_NOT_FOUND)
+        
+        cursor.execute("UPDATE etudiants_user SET is_valid = 0 WHERE id = %s", [etudiant_id])
+    
+    return Response({
+        'message': f'Étudiant {etudiant[1]} désactivé avec succès',
+        'etudiant_id': etudiant_id
+    }, status=status.HTTP_200_OK)
+
+@api_view(['POST'])
+def api_activer_etudiant(request, etudiant_id):
+    with connection.cursor() as cursor:
+        cursor.execute("SELECT id, nom FROM etudiants_user WHERE id = %s", [etudiant_id])
+        etudiant = cursor.fetchone()
+        
+        if not etudiant:
+            return Response({'error': 'Étudiant non trouvé'}, status=status.HTTP_404_NOT_FOUND)
+        
+        cursor.execute("UPDATE etudiants_user SET is_valid = 1 WHERE id = %s", [etudiant_id])
+    
+    return Response({
+        'message': f'Étudiant {etudiant[1]} activé avec succès',
+        'etudiant_id': etudiant_id
+    }, status=status.HTTP_200_OK)
+
+@api_view(['GET'])
+def api_detail_etudiant(request, etudiant_id):
     with connection.cursor() as cursor:
         cursor.execute("""
             SELECT id, nom, prenom, email, contact, is_valid
@@ -279,42 +297,6 @@ def detail_etudiants_api(request, etudiant_id):
         'contact': etudiant[4],
         'is_valid': etudiant[5]
     }
-
-    if request.method == 'POST':
-        action = request.data.get('action')
-        notes_data = request.data.get('notes_par_matiere', [])
-        notes_serializer = NotesSerializer(data=notes_data, many=True)
-        if not notes_serializer.is_valid():
-            return Response(notes_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-        
-        if action == 'enregistrer':
-            for note in notes_serializer.validated_data:
-                matiere = note.get('matiere')
-                interrogation1 = note.get('interrogation1', 0)
-                interrogation2 = note.get('interrogation2', 0)
-                devoir = note.get('devoir', 0)
-                coefficients = note.get('coefficients', 1)
-
-                with connection.cursor() as cursor:
-                    cursor.execute("""
-                        SELECT id FROM etudiants_notes
-                        WHERE note_id = %s AND matiere = %s
-                    """, [etudiant_id, matiere])
-                    exists = cursor.fetchall()
-                    
-                    if exists:
-                        cursor.execute("""
-                            UPDATE etudiants_notes
-                            SET interrogation1 = %s, interrogation2 = %s, devoir = %s, coefficients = %s
-                            WHERE note_id = %s AND matiere = %s
-                        """, [interrogation1, interrogation2, devoir, coefficients, etudiant_id, matiere])
-                    else:
-                        cursor.execute("""
-                            INSERT INTO etudiants_notes (note_id, matiere, interrogation1, interrogation2, devoir, coefficients)
-                            VALUES (%s, %s, %s, %s, %s, %s)
-                        """, [etudiant_id, matiere, interrogation1, interrogation2, devoir, coefficients])
-            
-            return Response({'message': 'Notes enregistrées avec succès'}, status=status.HTTP_200_OK)
 
     matieres_fixes = ['Python', 'Django', 'CSS', 'Bootstrap', 'SQL']
     notes_par_matiere = []
@@ -365,10 +347,9 @@ def detail_etudiants_api(request, etudiant_id):
             })
     moyenne_generale = round(total_moyenne / len(notes_par_matiere), 2) if notes_par_matiere else 0
     moyenne_ponderee = round(total_ponderee / total_coeff, 2) if total_coeff else 0
-    notes_serializer = NotesSerializer(notes_par_matiere, many=True)
     response_data = {
         'etudiant': etudiant_data,
-        'notes_par_matiere': notes_serializer.data,
+        'notes_par_matiere': notes_par_matiere,
         'moyenne_generale': moyenne_generale,
         'moyenne_ponderee': moyenne_ponderee
     }
