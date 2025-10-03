@@ -33,7 +33,6 @@
                             <th><i class="fas fa-user"></i> Prénom</th>
                             <th><i class="fas fa-envelope"></i> Email</th>
                             <th><i class="fas fa-phone"></i> Contact</th>
-                            <th><i class="fas fa-info-circle"></i> Statut</th>
                             <th><i class="fas fa-cogs"></i> Actions</th>
                         </tr>
                     </thead>
@@ -45,13 +44,6 @@
                             <td>{{ etudiant.email }}</td>
                             <td>{{ etudiant.contact }}</td>
                             <td>
-                                {% if etudiant.is_valid %}
-                                    <span class="badge bg-success">Actif</span>
-                                {% else %}
-                                    <span class="badge bg-danger">Inactif</span>
-                                {% endif %}
-                            </td>
-                            <td>
                                 <div class="d-flex gap-1">
                                     <a href="{% url 'etudiants:detail_etudiant' etudiant.id %}" class="btn btn-outline-info btn-sm" title="Détails">
                                         <i class="fas fa-eye"></i>
@@ -61,9 +53,9 @@
                                             {% csrf_token %}
                                             <input type="hidden" name="etudiant_id" value="{{ etudiant.id }}">
                                             <input type="hidden" name="action" value="desactiver">
-                                            <button type="submit" class="btn btn-outline-warning btn-sm" title="Désactiver" 
+                                            <button type="submit" class="btn btn-outline-success btn-sm" title="Désactiver" 
                                                     onclick="return confirm('Êtes-vous sûr de vouloir désactiver cet étudiant ?')">
-                                                <i class="fas fa-user-slash"></i>
+                                                <i class="fas fa-user-check"></i>
                                             </button>
                                         </form>
                                     {% else %}
@@ -71,9 +63,9 @@
                                             {% csrf_token %}
                                             <input type="hidden" name="etudiant_id" value="{{ etudiant.id }}">
                                             <input type="hidden" name="action" value="activer">
-                                            <button type="submit" class="btn btn-outline-success btn-sm" title="Activer" 
+                                            <button type="submit" class="btn btn-outline-warning btn-sm" title="Activer" 
                                                     onclick="return confirm('Êtes-vous sûr de vouloir activer cet étudiant ?')">
-                                                <i class="fas fa-user-check"></i>
+                                                <i class="fas fa-user-slash"></i>
                                             </button>
                                         </form>
                                     {% endif %}

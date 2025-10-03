@@ -64,18 +64,35 @@ def ajouter_etudiant(request):
     return render(request, 'etudiants/ajouter_etudiant.html', {'message': message})
 
 def detail_etudiants(request, etudiant_id):
-    
     with connection.cursor() as cursor:
         cursor.execute("""
             SELECT id, nom, prenom, email, contact, is_valid
             FROM etudiants_user 
             WHERE id = %s
         """, [etudiant_id])
-        etudiant = cursor.fetchone()
+        row = cursor.fetchone()
 
-    if not etudiant:
+    if not row:
         messages.error(request, "Étudiant introuvable.")
         return render(request, 'etudiants/detail_etudiants.html', {'etudiant': None})
+
+    etudiant = {
+        'id': row[0],
+        'nom': row[1],
+        'prenom': row[2],
+        'email': row[3],
+        'contact': row[4],
+        'is_valid': row[5]
+    }
+
+    if not etudiant:
+        messages.warning(request, "Cet étudiant est inactif. Vous ne pouvez pas modifier ses notes.")
+        return render(request, 'etudiants/detail_etudiants.html', {
+            'etudiant': etudiant,
+            'notes_par_matiere': [],
+            'moyenne_generale': 0,
+            'moyenne_ponderee': 0
+        })
 
     matieres_fixes = ['Python', 'Django', 'CSS', 'Bootstrap', 'SQL']
     notes_par_matiere = []
@@ -93,8 +110,8 @@ def detail_etudiants(request, etudiant_id):
         for i in range(1, nb_matieres + 1):
             matiere = request.POST.get(f'matiere_{i}')
             interrogation1 = float(request.POST.get(f'interrogation1_{i}', 0) or 0)
-            devoir = float(request.POST.get(f'devoir_{i}', 0) or 0)
             interrogation2 = float(request.POST.get(f'interrogation2_{i}', 0) or 0)
+            devoir = float(request.POST.get(f'devoir_{i}', 0) or 0)
             coefficients = float(request.POST.get(f'coefficients_{i}', 1) or 1)
 
             moyenne = round((interrogation1 + devoir + interrogation2) / 3, 2)
@@ -118,19 +135,19 @@ def detail_etudiants(request, etudiant_id):
                     cursor.execute("""
                         SELECT id FROM etudiants_notes
                         WHERE note_id = %s AND matiere = %s
-                    """, [etudiant_id, matiere])
-                    exists = cursor.fetchall()
+                    """, [etudiant['id'], matiere])
+                    exists = cursor.fetchone()
                     if exists:
                         cursor.execute("""
                             UPDATE etudiants_notes
                             SET interrogation1 = %s, interrogation2 = %s, devoir = %s, coefficients = %s
                             WHERE note_id = %s AND matiere = %s
-                        """, [interrogation1, interrogation2, devoir,coefficients, etudiant_id, matiere])
+                        """, [interrogation1, interrogation2, devoir, coefficients, etudiant['id'], matiere])
                     else:
                         cursor.execute("""
                             INSERT INTO etudiants_notes (note_id, matiere, interrogation1, interrogation2, devoir, coefficients)
                             VALUES (%s, %s, %s, %s, %s, %s)
-                        """,[etudiant_id, matiere, interrogation1, interrogation2, devoir, coefficients])
+                        """, [etudiant['id'], matiere, interrogation1, interrogation2, devoir, coefficients])
 
         moyenne_generale = round(total_moyenne / nb_matieres, 2) if nb_matieres else 0
         moyenne_ponderee = round(total_ponderee / total_coeff, 2) if total_coeff else 0
@@ -146,7 +163,7 @@ def detail_etudiants(request, etudiant_id):
                 SELECT matiere, interrogation1, interrogation2, devoir, coefficients
                 FROM etudiants_notes 
                 WHERE note_id = %s
-            """, [etudiant_id])
+            """, [etudiant['id']])
             notes_data = cursor.fetchall()
             notes_dict = {row[0]: row for row in notes_data}
 
@@ -156,11 +173,11 @@ def detail_etudiants(request, etudiant_id):
 
         for matiere in matieres_fixes:
             if matiere in notes_dict:
-                interrogation1, interrogation2, devoir, coefficients = notes_dict[matiere][1], notes_dict[matiere][2], notes_dict[matiere][3], notes_dict[matiere][4]
-                interrogation1 = interrogation1 or 0
-                devoir = devoir or 0
-                interrogation2 = interrogation2 or 0
-                coefficients = coefficients or 1
+                interrogation1 = notes_dict[matiere][1] or 0
+                interrogation2 = notes_dict[matiere][2] or 0
+                devoir = notes_dict[matiere][3] or 0
+                coefficients = notes_dict[matiere][4] or 1
+
                 moyenne = round((interrogation1 + devoir + interrogation2) / 3, 2)
                 moyenne_ponderee_calc = moyenne * coefficients
 
