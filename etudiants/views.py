@@ -23,7 +23,7 @@ def list_etudiants(request):
             return redirect('etudiants:liste_etudiants')
 
     with connection.cursor() as cursor:
-        cursor.execute("SELECT id, nom, prenom, email, contact, is_valid FROM etudiants_user")
+        cursor.execute("SELECT id, nom, prenom, email, contact, is_valid FROM etudiants_user ORDER BY id DESC")
         rows = cursor.fetchall()
         
     etudiants = []

@@ -53,7 +53,7 @@
                                             {% csrf_token %}
                                             <input type="hidden" name="etudiant_id" value="{{ etudiant.id }}">
                                             <input type="hidden" name="action" value="desactiver">
-                                            <button type="submit" class="btn btn-outline-success btn-sm" title="Désactiver" 
+                                            <button type="submit" class="btn btn-outline-success btn-sm" title="Appuyer pour Désactiver" 
                                                     onclick="return confirm('Êtes-vous sûr de vouloir désactiver cet étudiant ?')">
                                                 <i class="fas fa-user-check"></i>
                                             </button>
@@ -63,7 +63,7 @@
                                             {% csrf_token %}
                                             <input type="hidden" name="etudiant_id" value="{{ etudiant.id }}">
                                             <input type="hidden" name="action" value="activer">
-                                            <button type="submit" class="btn btn-outline-warning btn-sm" title="Activer" 
+                                            <button type="submit" class="btn btn-outline-warning btn-sm" title="Appuyer pour Activer" 
                                                     onclick="return confirm('Êtes-vous sûr de vouloir activer cet étudiant ?')">
                                                 <i class="fas fa-user-slash"></i>
                                             </button>
