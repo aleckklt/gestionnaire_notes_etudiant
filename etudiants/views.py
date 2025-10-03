@@ -216,7 +216,7 @@ def detail_etudiants(request, etudiant_id):
 @api_view(['GET'])
 def api_list_etudiants(request):
     with connection.cursor() as cursor:
-        cursor.execute("SELECT id, nom, prenom, email, contact, is_valid FROM etudiants_user")
+        cursor.execute("SELECT id, nom, prenom, email, contact, is_valid FROM etudiants_user ORDER BY id DESC")
         rows = cursor.fetchall()
 
     etudiants = []
@@ -225,13 +225,22 @@ def api_list_etudiants(request):
             'id': row[0], 
             'nom': row[1], 
             'prenom': row[2], 
-            'email': row[3], 
+            'email': row[3],
             'contact': row[4], 
             'is_valid': row[5]
         })
 
     serializer = UserSerializer(etudiants, many=True)
-    return Response(serializer.data, status=status.HTTP_200_OK)
+    return Response(
+    {
+        "response": "ok",
+        "message": {"en": "The etudiants list is ready",
+                    "fr":"La liste étudiant est prête."
+                    },
+        "data": serializer.data
+    },
+    status=status.HTTP_200_OK
+)
 
 @api_view(['POST'])
 def api_create_etudiant(request):
@@ -256,9 +265,27 @@ def api_create_etudiant(request):
                 "INSERT INTO etudiants_user (nom, prenom, email, contact, is_valid) VALUES (%s, %s, %s, %s, %s)",
                 [nom, prenom, email, contact, is_valid]
             )
-    
-        return Response(serializer.data, status=status.HTTP_201_CREATED)
-    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+        return Response(
+            { 
+                "response":"created",
+                "message":{"en":"The etudiants is registred.",
+                           "fr":" L'etudiants à bien été enregistrer"
+                           },    
+                "data": serializer.data
+             }, 
+             status=status.HTTP_201_CREATED
+        )
+    return Response(
+        {
+            "response":"bad_request",
+            "message": {"en":"The etudiant cannot be registred.",
+                        "fr":"Veuillez vérifier que tous les champs requis sont remplis ou s'il n'existe pas déja"
+                        },
+            "data": serializer.errors
+        }, 
+        status=status.HTTP_400_BAD_REQUEST
+    )
 
 @api_view(['POST'])
 def api_desactiver_etudiant(request, etudiant_id):
@@ -375,7 +402,7 @@ def api_detail_etudiant(request, etudiant_id):
 @api_view(['PATCH'])
 def api_modifier_notes_etudiant(request, etudiant_id):
     with connection.cursor() as cursor:
-        cursor.execute("SELECT id FROM etudiants_user WHERE id = %s", [etudiant_id])
+        cursor.execute("SELECT id, is_valid FROM etudiants_user WHERE id = %s", [etudiant_id])
         etudiant = cursor.fetchone()
         
         if not etudiant:
@@ -383,24 +410,30 @@ def api_modifier_notes_etudiant(request, etudiant_id):
                 {'error': 'Étudiant non trouvé'},
                 status=status.HTTP_404_NOT_FOUND
             )
-    
+
+        if etudiant[1] == 0:
+            return Response(
+                {'error': 'Impossible de modifier les notes. Cet étudiant est désactivé.'},
+                status=status.HTTP_403_FORBIDDEN
+            )
+
     notes_data = request.data.get('notes', [])
-    
+
     try:
         with connection.cursor() as cursor:
             for note in notes_data:
                 matiere = note.get('matiere')
-                interrogation1 = note.get('interrogation1', 0)
-                interrogation2 = note.get('interrogation2', 0)
-                devoir = note.get('devoir', 0)
-                coefficients = note.get('coefficients', 1)
-               
+                interrogation1 = note.get('interrogation1', 0) or 0
+                interrogation2 = note.get('interrogation2', 0) or 0
+                devoir = note.get('devoir', 0) or 0
+                coefficients = note.get('coefficients', 1) or 1
+
                 cursor.execute("""
                     SELECT id FROM etudiants_notes 
                     WHERE note_id = %s AND matiere = %s
                 """, [etudiant_id, matiere])
                 exists = cursor.fetchone()
-                
+
                 if exists:
                     cursor.execute("""
                         UPDATE etudiants_notes 
@@ -421,18 +454,19 @@ def api_modifier_notes_etudiant(request, etudiant_id):
 
             for matiere in matieres_fixes:
                 cursor.execute("""
-                    SELECT matiere, interrogation1, interrogation2, devoir, coefficients
+                    SELECT interrogation1, interrogation2, devoir, coefficients
                     FROM etudiants_notes 
                     WHERE note_id = %s AND matiere = %s
                 """, [etudiant_id, matiere])
                 note_data = cursor.fetchone()
-                
+
                 if note_data:
-                    interrogation1, interrogation2, devoir, coefficients = note_data[1], note_data[2], note_data[3], note_data[4]
+                    interrogation1, interrogation2, devoir, coefficients = note_data
                     interrogation1 = interrogation1 or 0
-                    devoir = devoir or 0
                     interrogation2 = interrogation2 or 0
+                    devoir = devoir or 0
                     coefficients = coefficients or 1
+
                     moyenne = round((interrogation1 + devoir + interrogation2) / 3, 2)
                     moyenne_ponderee_calc = moyenne * coefficients
 
@@ -443,8 +477,8 @@ def api_modifier_notes_etudiant(request, etudiant_id):
                     notes_par_matiere.append({
                         'matiere': matiere,
                         'interrogation1': interrogation1,
-                        'devoir': devoir,
                         'interrogation2': interrogation2,
+                        'devoir': devoir,
                         'coefficients': coefficients,
                         'moyenne': moyenne
                     })
@@ -452,25 +486,23 @@ def api_modifier_notes_etudiant(request, etudiant_id):
                     notes_par_matiere.append({
                         'matiere': matiere,
                         'interrogation1': 0,
-                        'devoir': 0,
                         'interrogation2': 0,
+                        'devoir': 0,
                         'coefficients': 1,
                         'moyenne': 0
                     })
-            
+
             moyenne_generale = round(total_moyenne / len(notes_par_matiere), 2) if notes_par_matiere else 0
             moyenne_ponderee = round(total_ponderee / total_coeff, 2) if total_coeff else 0
-            
-            response_data = {
+
+            return Response({
                 'message': 'Notes modifiées avec succès',
                 'etudiant_id': etudiant_id,
                 'notes_par_matiere': notes_par_matiere,
                 'moyenne_generale': moyenne_generale,
                 'moyenne_ponderee': moyenne_ponderee
-            }
-            
-            return Response(response_data, status=status.HTTP_200_OK)
-            
+            }, status=status.HTTP_200_OK)
+
     except Exception as e:
         return Response(
             {'error': f'Erreur lors de la modification des notes: {str(e)}'},
